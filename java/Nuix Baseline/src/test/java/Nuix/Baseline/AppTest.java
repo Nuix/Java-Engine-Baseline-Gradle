@@ -15,8 +15,14 @@ class AppTest {
     void checkEnvironment() {
         App ourApp = new App();
         assertNotNull(ourApp.checkEnvironment(), "PATH IS NULL");
-        assert !(ourApp.checkEnvironment().toLowerCase().contains("engine/lib")) : "Engine Libs not in path";
-        assert !(ourApp.checkEnvironment().toLowerCase().contains("engine/bin")) : "Engine Bin not in path";
+        for (String expectedLocation : (new String[]{"engine/lib","engine/bin"})) {
+            assert !(ourApp.checkEnvironment().toLowerCase().contains(expectedLocation)) :
+                    String.format("%s not in path",expectedLocation);
+            File engineDirectory=new File(expectedLocation);
+            assertTrue(engineDirectory.exists() && engineDirectory.isDirectory(),
+                    String.format("The engine Directory '%s' is supplied but does not exist",expectedLocation));
+        }
+
     }
 
     private String checkSwitch(List<String> jvmArgs,String switchName)

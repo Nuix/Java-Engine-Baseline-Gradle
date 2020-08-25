@@ -69,7 +69,10 @@ public class App {
         System.out.println("logdir:" + System.getProperty("nuix.logdir"));
         System.out.println("userdatabase:" + System.getProperty("nuix.userDataBase"));
         System.out.println("Starting up engine...");
-
+        try (GlobalContainer container = nuix.engine.GlobalContainerFactory.newContainer())
+        {
+            /* TODO */
+        }
         System.out.println("Successful");
     }
 }
