@@ -1,49 +1,23 @@
 package Nuix.Baseline;
 
 import com.google.common.collect.ImmutableMap;
-
-import nuix.engine.*;
+import nuix.LicenceException;
+import nuix.engine.AvailableLicence;
+import nuix.engine.Engine;
+import nuix.engine.GlobalContainer;
+import nuix.engine.LicenceSource;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
-import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 public class App {
-    private static final Logger logger = Logger.getRootLogger();
-
-    public static boolean configureLogger()
-    {
-        String pathOflog4jproperties=System.getProperty("user.dir") + "\\engine\\config\\log4j.properties";
-        Properties props = new Properties();
-        InputStream log4jSettingsStream;
-        try
-        {
-            log4jSettingsStream = new FileInputStream(new File(pathOflog4jproperties));
-            props.load(log4jSettingsStream);
-            PropertyConfigurator.configure(props);
-            BasicConfigurator.configure();
-        }
-        catch (FileNotFoundException eFileNotFound)
-        {
-            System.out.println("Error, could not find log4j at path:" + pathOflog4jproperties);
-            return false;
-        }
-        catch (IOException ioEx)
-        {
-            System.out.println("Error, could not read log4j at path:" + pathOflog4jproperties);
-            return false;
-        }
-        logger.setLevel(Level.INFO);
-        return true;
-    }
-
+    private static final Logger logger = Logger.getLogger(App.class);
+    private static final Boolean blindlyTrustServerCertificate=false;
     //Unit test only
     public static String checkEnvironment()
     {
@@ -60,124 +34,125 @@ public class App {
     public static void checkEngine(){
         try (GlobalContainer container = nuix.engine.GlobalContainerFactory.newContainer())
         {
-            /* Intentionally left empty - used for unit tests only */
+            /*
+             * Intentionally left empty - used for unit tests only
+             * With the below only included so IDE warnings do not get flagged
+             */
+            System.out.println(container.getClass().toString() + " initiated");
         }
     }
 
-    public static void main(String [] args)
-    {
-        configureLogger();
-        System.out.println("libdir:" + System.getProperty("nuix.libdir"));
-        System.out.println("logdir:" + System.getProperty("nuix.logdir"));
-        System.out.println("userDataBase:" + System.getProperty("nuix.userDataBase"));
-        System.out.println("Starting up engine...");
+    public static void main(String [] args) {
+        //Ensure your log4j.properties is in your resources folder to be automatically picked up.
+        BasicConfigurator.configure();
+        logger.setLevel(Level.INFO);
+        logger.info("libdir:" + System.getProperty("nuix.libdir"));
+        logger.info("logdir:" + System.getProperty("nuix.logdir"));
+        logger.info("userDataBase:" + System.getProperty("nuix.userDataBase"));
+        logger.info("Engine is starting up...");
         App.getEngine(getConfig(),getWorkerOptions());
-        System.out.println("Successful");
+        logger.info("Engine is shutting down...");
     }
 
     private static Map<String, Object> getConfig()
     {
-        Map<String, Object> config = new HashMap<String, Object>();
+        Map<String, Object> config = new HashMap<>();
         config.put("nuix.username", "student.name");
         config.put("nuix.password", "student.password");
-        config.put("nuix.license.source", "https://licence-api.nuix.com");
-        config.put("nuix.license.type", "enterprise-workstation");
+        //if null will attempt to connect and query all.
+        config.put("nuix.licence.source", "https://licence-api.nuix.com");
+        //if null will choose first available licence discovered.
+        config.put("nuix.licence.type", "enterprise-workstation");
+        //The order and types to look for, available types are "cloud-server","dongle","server","system"
+        config.put("nuix.licence.handlers", new String[]{"cloud-server","dongle","server","system"});
         return config;
     }
 
     private static Map<String, Object> getWorkerOptions()
     {
-        Map<String, Object> workerOptions = new HashMap<String, Object>();
+        Map<String, Object> workerOptions = new HashMap<>();
         workerOptions.put("workerCount",2);
         return workerOptions;
     }
 
     private static void configCredentials(Map<String, Object> config, Engine engine)
     {
-        engine.whenAskedForCredentials(new CredentialsCallback()
-        {
-            @Override
-            public void execute(CredentialsCallbackInfo callback)
-            {
-                logger.info("Offering credentials to server [" + callback.getAddress() + "]");
-                callback.setUsername((String)config.get("nuix.username"));
-                callback.setPassword((String)config.get("nuix.password"));
-            }
+        engine.whenAskedForCredentials(callback -> {
+            logger.info("Offering credentials to server [" + callback.getAddress() + "]");
+            callback.setUsername((String)config.get("nuix.username"));
+            callback.setPassword((String)config.get("nuix.password"));
         });
     }
 
-    private static void trustCertificate(Engine engine, boolean blindlyTrustOption)
+    private static void trustCertificate(Engine engine)
     {
-        engine.whenAskedForCertificateTrust(new CertificateTrustCallback()
-        {
-            @Override
-            public void execute(CertificateTrustCallbackInfo callback)
-            {
-                //This method should only be reserved for scenario's you have issues and can't fix the licence source.
-                logger.info("Trusting certificate blindly!");
-                callback.setTrusted(blindlyTrustOption);
-            }
+        engine.whenAskedForCertificateTrust(callback -> {
+            //This method should only be reserved for scenario's you have issues and can't fix the licence source.
+            logger.info("Trusting certificate blindly!");
+            callback.setTrusted(blindlyTrustServerCertificate);
         });
     }
 
-    private static void getLicense(Engine engine,Map<String, Object> config,Map<String, Object> workerOptions)
-    {
+    private static void getlicence(Engine engine,Map<String, Object> config,Map<String, Object> workerOptions) throws LicenceException {
         logger.info("Acquiring a licence");
-        for (LicenceSource licenceServer : engine.getLicensor().findLicenceSources(ImmutableMap.of("sources", "cloud-server")))
+        for (LicenceSource myLicenceSource : engine.getLicensor().findLicenceSources(ImmutableMap.of("sources", config.get("nuix.licence.handlers"))))
         {
-            logger.info("\tFound " + licenceServer.getLocation().toString());
-            if (licenceServer.getLocation().toString().equals((String)config.get("nuix.license.source")))
+            logger.info(String.format("\tFound %s (%s)",myLicenceSource.getLocation(),myLicenceSource.getType()));
+            if (myLicenceSource.getLocation().equals(config.get("nuix.licence.source")) || (config.get("nuix.licence.source")==null))
             {
-                logger.info("\t\tConnected to " + (String)config.get("nuix.license.source"));
+                logger.info(String.format("\t\tConnected to %s",config.get("nuix.licence.source")));
                 try
                 {
-                    Iterable<AvailableLicence> licenses=licenceServer.findAvailableLicences();
-                    if(licenses!=null)
+                    Iterable<AvailableLicence> licences=myLicenceSource.findAvailableLicences();
+                    for (AvailableLicence licence : licences)
                     {
-                        for (AvailableLicence licence : licenses)
+                        logger.info(String.format("\t\t\tlicence discovered %s",licence.getShortName()));
+                        if(licence.getShortName().equals(config.get("nuix.licence.type")) || config.get("nuix.licence.type")== null)
                         {
-                            if(licence.getShortName().equals((String)config.get("nuix.license.type")))
-                            {
-                                licence.acquire(workerOptions);
-                                break;
-                            }
+                            licence.acquire(workerOptions);
+                            break;
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.warn("Errors trying to enumerate licence source (probably bad cred's are incompatible version):" + (String)config.get("nuix.license.source"));
+                    logger.warn("Errors trying to enumerate licence source (probably bad cred's are incompatible version):" + config.get("nuix.licence.source"));
                 }
                 if(engine.getLicence() != null)
                 {
+                    //break the first time a licence acquisition was made so that only 1 licence is acquired.
                     break;
                 }
             }
         }
         if(engine.getLicence() == null)
         {
-            logger.info("No Licence Acquired... failed!");
-            System.exit(1);
+            throw new LicenceException(String.format("Licence of type %s could not be acquired",config.get("nuix.licence.type")));
         }
     }
 
-    private static void getEngine(Map<String, Object> config,Map<String, Object> workerOptions)
-    {
+    private static void getEngine(Map<String, Object> config,Map<String, Object> workerOptions) {
         try (GlobalContainer container = nuix.engine.GlobalContainerFactory.newContainer())
         {
             try (Engine engine = container.newEngine(config))
             {
                 logger.info("Initialising:" + engine.getVersion());
                 configCredentials(config,engine);
-                trustCertificate(engine,false);
-                getLicense(engine,config,workerOptions);
+                trustCertificate(engine);
+                getlicence(engine,config,workerOptions);
                 lab(engine);
+            } catch (LicenceException e) {
+                logger.error(e.getMessage());
             }
         }
     }
 
     private static void lab(Engine engine)
     {
-        logger.info("Congratulations!  You've acquired a " + engine.getLicence().getShortName() + " with " + engine.getLicence().getWorkers() + " workers.");
+        if(engine.getLicence() != null) {
+            logger.info(String.format("Congratulations!  You've acquired a %s  with %s workers.",
+                    engine.getLicence().getShortName(),
+                    engine.getLicence().getWorkers()));
+        }
     }
 }
