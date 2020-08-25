@@ -1,0 +1,132 @@
+/*
+ * This file was handcrafted for Nuix specificiations running intelliJ
+ * Eclipse and other IDE to be done at a later time
+ */
+
+plugins {
+    // Apply the java plugin to add support for Java
+    id 'java'
+
+    // Apply the application plugin to add support for building a CLI application.
+    id 'application'
+
+    // In order to support run configurations
+    id "org.jetbrains.gradle.plugin.idea-ext" version "0.8.1"
+}
+
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+    /* https://stackoverflow.com/questions/23023069/gradle-download-and-unzip-file-from-url
+     * Seems basic Auth doesn't work with download.nuix.com *cry*
+    ivy {
+        url 'https://download.nuix.com/releases/engine/latest/engine-dist-win32-amd64.zip?eula=accepted'
+
+        patternLayout {
+            artifact '/[organisation]/[module]/archive/[revision].[ext]'
+        }
+
+        credentials {
+            username "studentName"
+            password "studentPassword"
+        }
+
+        // This is required in Gradle 6.0+ as metadata file (ivy.xml)
+        // is mandatory. Docs linked below this code section
+        metadataSources { artifact() }
+    }*/
+
+    flatDir {
+        dirs 'engine/lib'
+    }
+}
+
+dependencies {
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:29.0-jre'
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+
+    // Use JUnit Jupiter Engine for testing.
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+
+    //doing the below makes the command line LONG. is there a better way?
+    implementation fileTree(dir: 'engine/lib', include: '*.jar')
+
+    //partial complains about classnotfound picocontainer
+    //implementation fileTree(dir: 'engine/lib', include: 'nuix*.jar')
+
+}
+
+import org.jetbrains.gradle.ext.*
+
+
+application {
+    // Define the main class for the application.
+    mainClassName = 'Nuix.Baseline.App'
+
+}
+
+test {
+    // Use junit platform for unit tests
+    useJUnitPlatform()
+}
+
+
+/*
+ * Run configurations are documented here: https://github.com/JetBrains/gradle-idea-ext-plugin/wiki/DSL-spec-v.-0.1
+ */
+idea
+        {
+            project
+                    {
+                        settings {
+                            runConfigurations {
+                                "Nuix Baseline.App"(Application)
+                                        {
+                                            mainClass = getProject().idea.module.name.replaceAll(" ", ".") + '.App'
+                                            moduleName = getProject().idea.module.name.replaceAll(" ", "_") + '.main'
+                                            / *
+                                              * java specific like -xms should be specified here
+                                              * as well as the Nuix container requirements
+                                              */
+                                            jvmArgs = '     -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"' +
+                                                    '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"' +
+                                                    ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"'
+                                            programParameters = ''
+                                            envs = new HashMap<String, String>() {
+                                                {
+                                                    // Prevent any potential conflicts with REST on the same box
+                                                    // Also prevent any potential existing issues with PATH
+                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
+                                                }
+                                            }
+                                        }
+                                "Nuix Baseline Tests.App"(Gradle)
+                                        {
+                                            scriptParameters='--tests "AppTest.*"'
+                                            taskNames=[":test"]
+                                            projectPath=System.getProperty("user.dir")
+                                            envs = new HashMap<String, String>() {
+                                                {
+                                                    // Prevent any potential conflicts with REST on the same box
+                                                    // Also prevent any potential existing issues with PATH
+                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
+                                                }
+                                            }
+                                            / *
+                                              * java specific like -xms should be specified here
+                                              * as well as the Nuix container requirements
+                                              */
+                                            jvmArgs = '     -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"' +
+                                                    '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"' +
+                                                    ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"'
+                                        }
+                            }
+                            copyright {}
+                            // other project level settings
+                        }
+                    }
+        }
