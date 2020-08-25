@@ -53,6 +53,8 @@ hs_err_pid*
 */*/.idea/vcs.xml
 */.idea/jsLibraryMappings.xml
 */*/.idea/jsLibraryMappings.xml
+*/.idea/codeStyles/*
+*/*/.idea/codeStyles/*
 
 # Sensitive or high-churn files:
 */.idea/dataSources.ids
