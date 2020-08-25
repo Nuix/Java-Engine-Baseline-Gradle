@@ -42,10 +42,17 @@ public class App {
         }
     }
 
-    public static void main(String [] args) {
+    public static Boolean configureLogger()
+    {
         //Ensure your log4j.properties is in your resources folder to be automatically picked up.
         BasicConfigurator.configure();
         logger.setLevel(Level.INFO);
+        return true;
+    }
+
+    public static void main(String [] args)
+    {
+        configureLogger();
         logger.info("libdir:" + System.getProperty("nuix.libdir"));
         logger.info("logdir:" + System.getProperty("nuix.logdir"));
         logger.info("userDataBase:" + System.getProperty("nuix.userDataBase"));
