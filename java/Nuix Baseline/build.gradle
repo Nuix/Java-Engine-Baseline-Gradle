@@ -12,6 +12,7 @@ plugins {
 
     // In order to support run configurations
     id "org.jetbrains.gradle.plugin.idea-ext" version "0.8.1"
+
 }
 
 repositories {
@@ -52,8 +53,12 @@ dependencies {
     // Use JUnit Jupiter Engine for testing.
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
+    // Useful for logging requirements
+    implementation( 'log4j:log4j:1.2.17')
+
     //doing the below makes the command line LONG. is there a better way?
-    implementation fileTree(dir: 'engine/lib', include: '*.jar')
+    implementation fileTree(dir: 'engine/lib', include: 'nuix*.jar')
+    runtimeOnly fileTree(dir: 'engine/lib', include: '*.jar', exclude : 'nuix*.jar')
 
     //partial complains about classnotfound picocontainer
     //implementation fileTree(dir: 'engine/lib', include: 'nuix*.jar')
@@ -92,9 +97,12 @@ idea
                                               * java specific like -xms should be specified here
                                               * as well as the Nuix container requirements
                                               */
-                                            jvmArgs = '     -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"' +
-                                                    '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"' +
-                                                    ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"'
+                                            jvmArgs = '     --illegal-access=warn ' + // This is here to stop the copious logs on reflection for jdk 11+
+                                                    '       -xmx4G ' //maximum memory
+                                                    '       -xms2G ' //minimum memory
+                                                    '       -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib" ' +
+                                                    '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs" ' +
+                                                    ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data" '
                                             programParameters = ''
                                             envs = new HashMap<String, String>() {
                                                 {
@@ -114,6 +122,8 @@ idea
                                                     // Prevent any potential conflicts with REST on the same box
                                                     // Also prevent any potential existing issues with PATH
                                                     put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
+                                                    // Example if required
+                                                    // put("JAVA_HOME", 'C:\\GitHub\\Java-Engine-Baseline-Gradle\\jdk1.8.0_261')
                                                 }
                                             }
                                             / *
