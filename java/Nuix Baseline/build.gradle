@@ -56,23 +56,59 @@ dependencies {
     // Useful for logging requirements
     implementation( 'log4j:log4j:1.2.17')
 
-    //doing the below makes the command line LONG. is there a better way?
+    //May generate long command line warnings.. but wait and the IDE will shorten it.
     implementation fileTree(dir: 'engine/lib', include: 'nuix-scripting*.jar')
     implementation fileTree(dir: 'engine/lib', include: 'nuix-engine*.jar')
     runtimeOnly fileTree(dir: 'engine/lib', include: '*.jar')
 
-    //partial complains about classnotfound picocontainer
-    //implementation fileTree(dir: 'engine/lib', include: 'nuix*.jar')
 
 }
+applicationDefaultJvmArgs=['-Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"',
+                           '-Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"',
+                           '-Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"']
 
 import org.jetbrains.gradle.ext.*
 
 
+TaskProvider<Task> checkEnvironment = tasks.register('checkEnvironment') {
+    doLast() {
+        //Enforce a java version of 1.8
+        def actualJava = System.getProperty('java.version')
+        if (!actualJava.startsWith("1.8")) {
+            //throw new GradleException("Running the build with Java ${actualJava}, expected 1.8")
+            System.out.println("Running the build with Java ${actualJava}, expected 1.8")
+        }
+    }
+}
+
+TaskProvider<Task> checkSwitches = tasks.register('checkSwitches'){
+    def jvmArgs = applicationDefaultJvmArgs
+    def expectedSwitches = ["-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataBase="]
+    for (expectedSwitch in expectedSwitches) {
+        def switchFound=false
+        for (jvmArg in jvmArgs) {
+            if(jvmArg.startsWith(expectedSwitch))
+            {
+                //should check if the switch is a folder that could be created or does exist
+                switchFound=true
+            }
+        }
+        if(!switchFound)
+        {
+            throw new GradleException("Expected switch was not found:" + expectedSwitch)
+        }
+    }
+}
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        dependsOn checkSwitches
+        dependsOn checkEnvironment
+    }
+}
+
 application {
     // Define the main class for the application.
     mainClassName = 'Nuix.Baseline.App'
-
 }
 
 test {
@@ -98,12 +134,6 @@ idea
                                               * java specific like -xms should be specified here
                                               * as well as the Nuix container requirements
                                               */
-                                            jvmArgs = '     --illegal-access=warn ' + // This is here to stop the copious logs on reflection for jdk 11+
-                                                    '       -Xmx2000m ' + //maximum memory
-                                                    '       -Xms1000m ' + //minimum memory
-                                                    '       -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib" ' +
-                                                    '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs" ' +
-                                                    ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data" '
                                             programParameters = ''
                                             envs = new HashMap<String, String>() {
                                                 {
@@ -112,6 +142,7 @@ idea
                                                     put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
                                                 }
                                             }
+                                            jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
                                 "Nuix Baseline Tests.App"(Gradle)
                                         {
@@ -127,15 +158,7 @@ idea
                                                     // put("JAVA_HOME", 'C:\\GitHub\\Java-Engine-Baseline-Gradle\\jdk1.8.0_261')
                                                 }
                                             }
-                                            / *
-                                              * java specific like -xms should be specified here
-                                              * as well as the Nuix container requirements
-                                              */
-                                            jvmArgs = '       -Xmx2000m ' +//maximum memory
-                                                      '       -Xms1000m ' + //minimum memory
-                                                      '       -Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"' +
-                                                      '       -Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"' +
-                                                      ' -Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"'
+                                            jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
                             }
                             copyright {}

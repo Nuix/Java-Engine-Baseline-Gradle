@@ -6,7 +6,6 @@ package Nuix.Baseline;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,43 +20,39 @@ class AppTest {
     @Test
     void checkEnvironment() {
         assertNotNull(App.checkEnvironment(), "PATH IS NULL");
-        for (String expectedLocation : (new String[]{"engine/lib","engine/bin"})) {
-            assert !(App.checkEnvironment().toLowerCase().contains(expectedLocation)) :
-                    String.format("%s not in path",expectedLocation);
-            File engineDirectory=new File(expectedLocation);
+        for (String expectedLocation : new String[]{"engine/lib", "engine/bin"}) {
+            assert !App.checkEnvironment().toLowerCase().contains(expectedLocation) :
+                    String.format("%s not in path", expectedLocation);
+            File engineDirectory = new File(expectedLocation);
             assertTrue(engineDirectory.exists() && engineDirectory.isDirectory(),
-                    String.format("The engine Directory '%s' is supplied but does not exist",expectedLocation));
+                    String.format("The engine Directory '%s' is supplied but does not exist", expectedLocation));
         }
 
     }
 
-    private String checkSwitch(List<String> jvmArgs,String switchName)
-    {
+    private String checkSwitch(List<String> jvmArgs, String switchName) {
         for (String jvmArg : jvmArgs) {
             System.out.println(jvmArg);
-            if(jvmArg.startsWith(switchName))
-            {
-                File switchDirectory=new File(jvmArg.split("=")[1]);
+            if (jvmArg.startsWith(switchName)) {
+                File switchDirectory = new File(jvmArg.split("=")[1]);
                 if (switchDirectory.exists() && switchDirectory.isDirectory()) {
                     return null;
-                }
-                else {
-                    return(String.format("The switch '%s' is supplied but does not point to a directory",switchName));
+                } else {
+                    return String.format("The switch '%s' is supplied but does not point to a directory", switchName);
                 }
             }
         }
-        return(String.format("The switch '%s' was not supplied",switchName));
+        return String.format("The switch '%s' was not supplied", switchName);
     }
 
     @Test
     void checkBuildEnvironment() {
         List<String> jvmArgs = App.checkBuildEnvironment();
-        for (String expectedSwitch : (new String[]{"-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataBase="})) {
-            String anyIssue=checkSwitch(jvmArgs,expectedSwitch);
-            assertNull(anyIssue,anyIssue);
+        for (String expectedSwitch : new String[]{"-Dnuix.libdir=", "-Dnuix.logdir=", "-Dnuix.userDataBase="}) {
+            String anyIssue = checkSwitch(jvmArgs, expectedSwitch);
+            assertNull(anyIssue, anyIssue);
         }
     }
-
 
     @Test
     void checkEngine() {
