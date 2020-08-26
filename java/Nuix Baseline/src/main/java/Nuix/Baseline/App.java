@@ -126,7 +126,13 @@ public class App {
                 }
                 catch (Exception e)
                 {
-                    logger.warn("Errors trying to enumerate licence source (probably bad cred's are incompatible version):" + myLicenceSource.getLocation().toString() + "\n" + e.getMessage() + "\n" + e.getCause().getMessage() + "\n" + e.getCause().getCause().getMessage());
+                    logger.warn("Errors trying to enumerate licence source:" + myLicenceSource.getLocation().toString());
+                    logger.warn(e.getMessage());
+                    while(e.getCause() != null)
+                    {
+                        e=(Exception) e.getCause();
+                        logger.warn("\t" + e.getMessage());
+                    }
                 }
                 if(engine.getLicence() != null)
                 {
