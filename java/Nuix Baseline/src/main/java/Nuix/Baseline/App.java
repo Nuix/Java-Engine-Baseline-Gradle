@@ -44,7 +44,7 @@ public class App {
 
     public static Boolean configureLogger()
     {
-        //Ensure your log4j.properties is in your resources folder to be automatically picked up.
+        //Ensure your log4j.properties is in your resources folder to be automatically applied.
         BasicConfigurator.configure();
         logger.setLevel(Level.INFO);
         return true;
@@ -64,14 +64,14 @@ public class App {
     private static Map<String, Object> getConfig()
     {
         Map<String, Object> config = new HashMap<>();
-        config.put("nuix.username", "student.name");
+        config.put("nuix.username", "student.username");
         config.put("nuix.password", "student.password");
         //if null will attempt to connect and query all.
-        config.put("nuix.licence.source", "https://licence-api.nuix.com");
+        config.put("nuix.licence.source", null); // CLS value is "https://licence-api.nuix.com"
         //if null will choose first available licence discovered.
         config.put("nuix.licence.type", "enterprise-workstation");
         //The order and types to look for, available types are "cloud-server","dongle","server","system"
-        config.put("nuix.licence.handlers", new String[]{"cloud-server","dongle","server","system"});
+        config.put("nuix.licence.handlers", new String[]{"server","dongle","system","cloud-server"});
         return config;
     }
 
@@ -107,7 +107,7 @@ public class App {
             logger.info(String.format("\tFound %s (%s)",myLicenceSource.getLocation(),myLicenceSource.getType()));
             if (myLicenceSource.getLocation().equals(config.get("nuix.licence.source")) || (config.get("nuix.licence.source")==null))
             {
-                logger.info(String.format("\t\tConnected to %s",config.get("nuix.licence.source")));
+                logger.info(String.format("\t\tConnected to %s",myLicenceSource.getLocation()));
                 try
                 {
                     Iterable<AvailableLicence> licences=myLicenceSource.findAvailableLicences();
@@ -123,7 +123,7 @@ public class App {
                 }
                 catch (Exception e)
                 {
-                    logger.warn("Errors trying to enumerate licence source (probably bad cred's are incompatible version):" + config.get("nuix.licence.source"));
+                    logger.warn("Errors trying to enumerate licence source (probably bad cred's are incompatible version):" + myLicenceSource.getLocation().toString() + "\n" + e.getMessage() + "\n" + e.getCause().getMessage() + "\n" + e.getCause().getCause().getMessage());
                 }
                 if(engine.getLicence() != null)
                 {
