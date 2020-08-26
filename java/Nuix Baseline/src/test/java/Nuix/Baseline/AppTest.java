@@ -6,17 +6,23 @@ package Nuix.Baseline;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AppTest {
     @Test
+    void configureLogger() {
+        assert App.configureLogger() : "Could not configure logger";
+    }
+
+
+    @Test
     void checkEnvironment() {
-        App ourApp = new App();
-        assertNotNull(ourApp.checkEnvironment(), "PATH IS NULL");
+        assertNotNull(App.checkEnvironment(), "PATH IS NULL");
         for (String expectedLocation : (new String[]{"engine/lib","engine/bin"})) {
-            assert !(ourApp.checkEnvironment().toLowerCase().contains(expectedLocation)) :
+            assert !(App.checkEnvironment().toLowerCase().contains(expectedLocation)) :
                     String.format("%s not in path",expectedLocation);
             File engineDirectory=new File(expectedLocation);
             assertTrue(engineDirectory.exists() && engineDirectory.isDirectory(),
@@ -45,23 +51,16 @@ class AppTest {
 
     @Test
     void checkBuildEnvironment() {
-        App ourApp = new App();
-        List<String> jvmArgs = ourApp.checkBuildEnvironment();
+        List<String> jvmArgs = App.checkBuildEnvironment();
         for (String expectedSwitch : (new String[]{"-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataBase="})) {
             String anyIssue=checkSwitch(jvmArgs,expectedSwitch);
             assertNull(anyIssue,anyIssue);
         }
     }
 
-    @Test
-    void configureLogger() {
-        App ourApp = new App();
-        assert ourApp.configureLogger() : "Could not configure logger";
-    }
 
     @Test
     void checkEngine() {
-        App ourApp=new App();
-        ourApp.checkEngine();
+        App.checkEngine();
     }
 }
