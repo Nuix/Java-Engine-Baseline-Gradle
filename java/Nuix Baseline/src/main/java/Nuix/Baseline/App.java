@@ -67,7 +67,10 @@ public class App {
         config.put("nuix.username", "student.username");
         config.put("nuix.password", "student.password");
         //if null will attempt to connect and query all.
-        config.put("nuix.licence.source", null); // CLS value is "https://licence-api.nuix.com"
+        // cloud-server value is "https://licence-api.nuix.com"
+        // server value would look like "some-server.domain.com:27443"
+        // dongle and system would look NX00000
+        config.put("nuix.licence.source", null);
         //if null will choose first available licence discovered.
         config.put("nuix.licence.type", "enterprise-workstation");
         //The order and types to look for, available types are "cloud-server","dongle","server","system"
@@ -157,7 +160,7 @@ public class App {
     private static void lab(Engine engine)
     {
         if(engine.getLicence() != null) {
-            logger.info(String.format("Congratulations!  You've acquired a %s  with %s workers.",
+            logger.info(String.format("Congratulations! You've acquired a %s with %s workers.",
                     engine.getLicence().getShortName(),
                     engine.getLicence().getWorkers()));
         }
