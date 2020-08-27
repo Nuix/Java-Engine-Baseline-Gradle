@@ -49,7 +49,7 @@ public class App {
         // dongle and system would look NX00000
         config.put("nuix.licence.source", null);
         //if null will choose first available licence discovered.
-        config.put("nuix.licence.type", "enterprise-workstation");
+        config.put("nuix.licence.type", "enterprise-reviewer");
         //The order and types to look for, available types are "cloud-server","dongle","server","system"
         config.put("nuix.licence.handlers", new String[]{"server", "dongle", "system", "cloud-server"});
         return config;
@@ -95,7 +95,14 @@ public class App {
                     for (AvailableLicence licence : licences) {
                         logger.info(String.format("\t\t\tlicence discovered %s", licence.getShortName()));
                         if (licence.getShortName().equals(config.get("nuix.licence.type")) || config.get("nuix.licence.type") == null) {
-                            licence.acquire(workerOptions);
+                            if(licence.canChooseWorkers())
+                            {
+                                licence.acquire(workerOptions);
+                            }
+                            else
+                            {
+                                licence.acquire();
+                            }
                             break;
                         }
                     }
