@@ -1,6 +1,7 @@
 package Nuix.Baseline;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 
 class AppTest {
 
@@ -41,7 +42,11 @@ class AppTest {
         }
         catch(Exception ex)
         {
-            assert ex.getCause().getMessage().equals("unable to find valid certification path to requested target") : "Licence Acquisition should have failed based on certificate but wasn't.";
+            while(ex.getCause()!=null)
+            {
+                ex = (Exception) ex.getCause();
+            }
+            Assertions.assertEquals(ex.getMessage(),"unable to find valid certification path to requested target");
 
         }
 
