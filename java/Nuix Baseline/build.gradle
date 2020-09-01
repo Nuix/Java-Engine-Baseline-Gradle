@@ -43,6 +43,8 @@ repositories {
     }
 }
 
+
+
 dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:29.0-jre'
@@ -56,16 +58,20 @@ dependencies {
     // Useful for logging requirements
     implementation( 'log4j:log4j:1.2.17')
 
+    //useful for parsing CLI paramaters
+    implementation ("info.picocli:picocli:4.5.1")
+
     //May generate long command line warnings.. but wait and the IDE will shorten it.
     implementation fileTree(dir: 'engine/lib', include: 'nuix-scripting*.jar')
     implementation fileTree(dir: 'engine/lib', include: 'nuix-engine*.jar')
     runtimeOnly fileTree(dir: 'engine/lib', include: '*.jar')
 
-
+    annotationProcessor 'info.picocli:picocli-codegen:4.5.1'
 }
+
 applicationDefaultJvmArgs=['-Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"',
                            '-Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"',
-                           '-Dnuix.userDataBase="' + System.getProperty("user.dir") + '\\engine\\user-data"']
+                           '-Dnuix.userDataDirs="' + System.getProperty("user.dir") + '\\engine\\user-data"']
 
 import org.jetbrains.gradle.ext.*
 
@@ -83,7 +89,7 @@ TaskProvider<Task> checkEnvironment = tasks.register('checkEnvironment') {
 
 TaskProvider<Task> checkSwitches = tasks.register('checkSwitches'){
     def jvmArgs = applicationDefaultJvmArgs
-    def expectedSwitches = ["-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataBase="]
+    def expectedSwitches = ["-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataDirs="]
     for (expectedSwitch in expectedSwitches) {
         def switchFound=false
         for (jvmArg in jvmArgs) {
@@ -116,7 +122,6 @@ test {
     useJUnitPlatform()
 }
 
-
 /*
  * Run configurations are documented here: https://github.com/JetBrains/gradle-idea-ext-plugin/wiki/DSL-spec-v.-0.1
  */
@@ -134,7 +139,8 @@ idea
                                               * java specific like -xms should be specified here
                                               * as well as the Nuix container requirements
                                               */
-                                            programParameters = ''
+                                            programParameters = '-h ' +
+                                                                '-d="' + System.getProperty("user.dir") + '\\engine\\user-data"';
                                             envs = new HashMap<String, String>() {
                                                 {
                                                     // Prevent any potential conflicts with REST on the same box
