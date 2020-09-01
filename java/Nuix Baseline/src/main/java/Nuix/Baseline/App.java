@@ -32,11 +32,6 @@ class App {
     private static Logger LOGGER = null;
 
     /**
-     * Generic App definition - used to contain this instance of the App for a lab Environment.
-     */
-    private static App labEnvironment = new App();
-
-    /**
      * -acquireAny=true
      * Acquire Any will only work if there is only one licence detected. Otherwise it will list all available licences
      */
@@ -44,7 +39,7 @@ class App {
             defaultValue = "false",
             description = "Acquire any licence based on cached credentials and detected hardware. " +
                           "Expects only one to be discovered, if specified all other flags are ignored.")
-    private Boolean ENGINE_AQUIRE_ANY;
+    private Boolean engineAcquireAny;
 
     /**
      * -userDataDirs="C:/engine/user-data"
@@ -53,7 +48,7 @@ class App {
     @Option(names = {"-d", "-userDataDirs"},
             required=true,
             description = "Where Nuix Engine will look for the folders containing user artefacts")
-    private String ENGINE_USER_DATA_DIRS;
+    private String engineUserDataDirs;
 
     /**
      * -userName="admin"
@@ -62,7 +57,7 @@ class App {
     @Option(names = {"-u", "-userName"},
             defaultValue = "",
             description = "Username for EVERY licence credential request")
-    private String LICENCE_SERVER_USERNAME = "";
+    private String licenceServerUsername = "";
 
     /**
      * -password="password"
@@ -71,7 +66,7 @@ class App {
     @Option(names = {"-p", "-password"},
             defaultValue = "",
             description = "Password for EVERY licence credential request")
-    private String LICENCE_SERVER_PASSWORD;
+    private String licenceServerPassword;
 
     /**
      * -trustCertificate=false
@@ -81,7 +76,7 @@ class App {
     @Option(names = {"-c", "-trustCertificate"},
             defaultValue = "false",
             description = "Forces bad certificates to be trusted.")
-    private Boolean LICENCE_SERVER_TRUST_CERTIFICATE;
+    private Boolean licenceServerTrustCertificate;
 
     /**
      * -licenceType="enterprise-workstation"
@@ -90,7 +85,7 @@ class App {
     @Option(names = {"-t", "-licenceType"},
             defaultValue = "",
             description = "Selects a licence source if multiple are available.")
-    private String LICENCE_SHORT_NAME;
+    private String licenceShortName;
 
     /**
      * -licenceSourceLocation="ausyd-l-nx0142.nuix.com:27443"
@@ -100,7 +95,7 @@ class App {
     @Option(names = {"-l", "-licenceSourceLocation"},
             defaultValue = "",
             description = "Selects a licence source if multiple are available.")
-    private String LICENCE_SOURCE_NAME;
+    private String licenceSourceName;
 
     /**
      * -licenceSourceType="system,dongle,server,cloud-server"
@@ -153,6 +148,7 @@ class App {
             BasicConfigurator.configure();
             LOGGER.setLevel(Level.INFO);
         }
+        App labEnvironment = new App();
         if (labEnvironment.parseCommandLine(args))
         {
             //Main app runs off here.
@@ -174,7 +170,7 @@ class App {
      */
     private Boolean parseCommandLine(String[] args)
     {
-        CommandLine commandLineApp = new CommandLine(labEnvironment);
+        CommandLine commandLineApp = new CommandLine(this);
         commandLineApp.setColorScheme(Help.defaultColorScheme(Help.Ansi.ON));
         try
         {
@@ -211,26 +207,26 @@ class App {
      */
     private void acquireLicence(Consumer<Engine> lab) throws LicenceException
     {
-        if (LICENCE_SERVER_USERNAME == null || LICENCE_SERVER_USERNAME.isEmpty())
+        if (licenceServerUsername == null || licenceServerUsername.isEmpty())
         {
-            LICENCE_SERVER_USERNAME = System.getProperty("nuix.user",
+            licenceServerUsername = System.getProperty("nuix.user",
                     System.getProperty("user.name",
                             "app-user"));
         }
-        if (!(LICENCE_SOURCE_NAME.isEmpty()))
+        if (!(licenceSourceName.isEmpty()))
         {
             //Include this server in the lookup to force check even if not discovered by default.
-            System.setProperty("nuix.registry.servers", LICENCE_SOURCE_NAME);
+            System.setProperty("nuix.registry.servers", licenceSourceName);
         }
         LOGGER.info("Java Version:" + System.getProperty("java.version"));
         LOGGER.info("libdir:" + System.getProperty("nuix.libdir"));
         LOGGER.info("logdir:" + System.getProperty("nuix.logdir"));
-        LOGGER.info("userDataDirs:" + ENGINE_USER_DATA_DIRS);
-        LOGGER.info("user:" + LICENCE_SERVER_USERNAME);
+        LOGGER.info("userDataDirs:" + engineUserDataDirs);
+        LOGGER.info("user:" + licenceServerUsername);
         LOGGER.info("Engine is starting up...");
         Map<String, String> ENGINE_CONFIG = ImmutableMap.of(
-                "userDataDirs", ENGINE_USER_DATA_DIRS,
-                "user", LICENCE_SERVER_USERNAME
+                "userDataDirs", engineUserDataDirs,
+                "user", licenceServerUsername
         );
         Exception lastException = null;
         try (GlobalContainer container = nuix.engine.GlobalContainerFactory.newContainer())
@@ -238,17 +234,17 @@ class App {
             try (Engine engine = container.newEngine(ENGINE_CONFIG))
             {
                 LOGGER.info("Initialising:" + engine.getVersion());
-                if(!(LICENCE_SERVER_USERNAME.isEmpty() || LICENCE_SERVER_PASSWORD.isEmpty()))
+                if(!(licenceServerUsername.isEmpty() || licenceServerPassword.isEmpty()))
                 {
                     engine.whenAskedForCredentials(callback ->
                     {
                         LOGGER.info("\t\t\tOffering credentials to server [" + callback.getAddress() + "]");
-                        callback.setUsername(LICENCE_SERVER_USERNAME);
-                        callback.setPassword(LICENCE_SERVER_PASSWORD);
+                        callback.setUsername(licenceServerUsername);
+                        callback.setPassword(licenceServerPassword);
                     });
                     LOGGER.info("Credential Callback applied:" + engine.getVersion());
                 }
-                if (LICENCE_SERVER_TRUST_CERTIFICATE)
+                if (licenceServerTrustCertificate)
                 {
                     //This method should only be reserved for scenario's you have issues and can't fix the licence source.
                     engine.whenAskedForCertificateTrust(callback ->
@@ -259,18 +255,10 @@ class App {
                     LOGGER.info("Certificate Trust Callback applied:" + engine.getVersion());
                 }
 
-                if (ENGINE_AQUIRE_ANY)
+                if (engineAcquireAny)
                 {
-                    try
-                    {
-                        engine.getLicensor().acquire();
-                        lab.accept(engine);
-                    }
-                    catch (LicenceException ex)
-                    {
-                        LOGGER.error(ex.getCause().getMessage());
-                        throw ex;
-                    }
+                    engine.getLicensor().acquire();
+                    lab.accept(engine);
                     return;
                 }
 
@@ -280,15 +268,15 @@ class App {
                 for (LicenceSource licenceSource : engine.getLicensor().findLicenceSources(licenceSourceConfig))
                 {
                     LOGGER.info("\tFound " + licenceSource.getLocation() + " (" + licenceSource.getType() + ")");
-                    if (licenceSource.getLocation().equals(LICENCE_SOURCE_NAME) || (LICENCE_SOURCE_NAME.isEmpty()))
+                    if (licenceSource.getLocation().equals(licenceSourceName) || (licenceSourceName.isEmpty()))
                     {
                         try
                         {
                             for (AvailableLicence availableLicence : licenceSource.findAvailableLicences())
                             {
                                 LOGGER.info("\t\tLicence discovered " + availableLicence.getShortName());
-                                if (availableLicence.getShortName().equals(LICENCE_SHORT_NAME) ||
-                                        (LICENCE_SHORT_NAME.isEmpty()))
+                                if (availableLicence.getShortName().equals(licenceShortName) ||
+                                        (licenceShortName.isEmpty()))
                                 {
                                     if (availableLicence.canChooseWorkers())
                                     {
@@ -314,16 +302,10 @@ class App {
                         }
                         catch (Exception e)
                         {
-                            LOGGER.warn("Errors trying to enumerate licence source:" + licenceSource.getLocation());
-                            LOGGER.warn(e.getMessage());
-                            while (e.getCause() != null)
-                            {
-                                e = (Exception) e.getCause();
-                                LOGGER.warn("\t\t" + e.getMessage());
-                            }
+                            LOGGER.warn("Errors trying to enumerate licence source:" + licenceSource.getLocation(),e);
                             lastException = e;
                         }
-                        if (engine.getLicence() != null || licenceSource.getLocation().equals(LICENCE_SOURCE_NAME))
+                        if (engine.getLicence() != null || licenceSource.getLocation().equals(licenceSourceName))
                         {
                             //break the first time a licence acquisition was made so that only 1 licence is acquired.
                             //also break when the source name was specified because we don't want to detect any further sources
@@ -340,7 +322,7 @@ class App {
                                         "\tLICENCE_SOURCE_NAME=%s\n" +
                                         "\tLICENCE_SHORT_NAME=%s\n" +
                                         "\tLICENCE_WORKER_COUNT=%s",
-                                Arrays.toString(LICENCE_SOURCES),LICENCE_SOURCE_NAME,LICENCE_SHORT_NAME,LICENCE_WORKER_COUNT));
+                                Arrays.toString(LICENCE_SOURCES), licenceSourceName, licenceShortName,LICENCE_WORKER_COUNT));
                     }
                     else
                     {
@@ -356,13 +338,7 @@ class App {
                     }
                     catch (Exception labException)
                     {
-                        LOGGER.error("Error running lab");
-                        labException.printStackTrace();
-                        while (labException.getCause() != null)
-                        {
-                            labException = (Exception) labException.getCause();
-                            LOGGER.warn("\t" + labException.getMessage());
-                        }
+                        LOGGER.error("Error running lab",labException);
                     }
                 }
             }
