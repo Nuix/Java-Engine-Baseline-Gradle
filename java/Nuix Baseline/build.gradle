@@ -16,27 +16,7 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
     jcenter()
-    /* https://stackoverflow.com/questions/23023069/gradle-download-and-unzip-file-from-url
-     * Seems basic Auth doesn't work with download.nuix.com *cry*
-    ivy {
-        url 'https://download.nuix.com/releases/engine/latest/engine-dist-win32-amd64.zip?eula=accepted'
-
-        patternLayout {
-            artifact '/[organisation]/[module]/archive/[revision].[ext]'
-        }
-
-        credentials {
-            username "studentName"
-            password "studentPassword"
-        }
-
-        // This is required in Gradle 6.0+ as metadata file (ivy.xml)
-        // is mandatory. Docs linked below this code section
-        metadataSources { artifact() }
-    }*/
 
     flatDir {
         dirs 'engine/lib'
