@@ -36,7 +36,8 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
 
     // Useful for logging requirements
-    implementation( 'log4j:log4j:1.2.17')
+    implementation( 'org.apache.logging.log4j:log4j-api:2.8.2')
+    implementation( 'org.apache.logging.log4j:log4j-core:2.8.2')
 
     //useful for parsing CLI paramaters
     implementation ("info.picocli:picocli:4.5.1")
@@ -56,7 +57,7 @@ applicationDefaultJvmArgs=['-Dnuix.libdir="' + System.getProperty("user.dir") + 
 import org.jetbrains.gradle.ext.*
 
 
-TaskProvider<Task> checkEnvironment = tasks.register('checkEnvironment') {
+task checkEnvironment {
     doLast() {
         //Enforce a java version of 1.8
         def actualJava = System.getProperty('java.version')
@@ -67,7 +68,7 @@ TaskProvider<Task> checkEnvironment = tasks.register('checkEnvironment') {
     }
 }
 
-TaskProvider<Task> checkSwitches = tasks.register('checkSwitches'){
+task checkSwitches {
     def jvmArgs = applicationDefaultJvmArgs
     def expectedSwitches = ["-Dnuix.libdir=","-Dnuix.logdir=","-Dnuix.userDataDirs="]
     for (expectedSwitch in expectedSwitches) {
