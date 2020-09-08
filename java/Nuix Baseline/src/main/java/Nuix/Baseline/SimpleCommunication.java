@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
  * Holds information about communication data for a single item.
  */
 public class SimpleCommunication implements Communication{
-    DateTime      dateTime;
+    DateTime      commDate;
     List<Address> toAddresses;
     List<Address> fromAddresses;
     List<Address> ccAddresses;
@@ -22,26 +22,26 @@ public class SimpleCommunication implements Communication{
 
     /**
      * Holds information about communication data for a single item.
-     * @param myDateTime the date of the communication.
-     * @param myFromAddresses The senders (From) for the communication.
-     * @param myToAddresses The direct recipients (To) for the communication.
-     * @param myCcAddresses The indirect recipients (Cc) for the communication.
-     * @param myBccAddresses The hidden recipients (Bcc) for the communication.
-     * @param myDelegateAddresses The delegated senders (Sender) for the communication.
+     * @param commDate the date of the communication.
+     * @param fromAddresses The senders (From) for the communication.
+     * @param toAddresses The direct recipients (To) for the communication.
+     * @param ccAddresses The indirect recipients (Cc) for the communication.
+     * @param bccAddresses The hidden recipients (Bcc) for the communication.
+     * @param delegateAddresses The delegated senders (Sender) for the communication.
      */
-    public SimpleCommunication(@Nullable DateTime myDateTime,
-                               @Nonnull ArrayList<Address> myFromAddresses,
-                               @Nonnull ArrayList<Address> myToAddresses,
-                               @Nonnull ArrayList<Address> myCcAddresses,
-                               @Nonnull ArrayList<Address> myBccAddresses,
-                               @Nonnull ArrayList<Address> myDelegateAddresses)
+    public SimpleCommunication(@Nullable DateTime commDate,
+                               @Nonnull ArrayList<Address> fromAddresses,
+                               @Nonnull ArrayList<Address> toAddresses,
+                               @Nonnull ArrayList<Address> ccAddresses,
+                               @Nonnull ArrayList<Address> bccAddresses,
+                               @Nonnull ArrayList<Address> delegateAddresses)
     {
-        dateTime          = myDateTime;
-        toAddresses       = myToAddresses;
-        fromAddresses     = myFromAddresses;
-        ccAddresses       = myCcAddresses;
-        bccAddresses      = myBccAddresses;
-        delegateAddresses = myDelegateAddresses;
+        this.commDate          = commDate;
+        this.toAddresses       = toAddresses;
+        this.fromAddresses     = fromAddresses;
+        this.ccAddresses       = ccAddresses;
+        this.bccAddresses      = bccAddresses;
+        this.delegateAddresses = delegateAddresses;
     }
 
     /**
@@ -73,7 +73,7 @@ public class SimpleCommunication implements Communication{
     @Override
     public DateTime getDateTime()
     {
-        return dateTime;
+        return commDate;
     }
 
     /**

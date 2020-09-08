@@ -1,13 +1,18 @@
 package Nuix.Baseline;
 
 import nuix.Address;
+import org.apache.commons.lang.StringUtils;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Represents the address of a single party in a communication, assumed internet-mail type
  */
 public class SimpleAddress implements Address {
 
-
+    private static final String[] ADDRESS_SPECIALS = "()<>,;:\\\"\t []/".split("");
+    private static final String[] PERSONAL_DISPLAY_SPECIALS = "<>@,\\\"".split("");
     String personal;
     String address;
     String type;
@@ -29,40 +34,27 @@ public class SimpleAddress implements Address {
 
     /**
      * Represents the address of a single party in a communication, assumed internet-mail type
-     * @param myPersonal the aesthetic component of the address
-     * @param myAddress the actual address
-     * @param myType one of the available CommunicationType ("internet-mail,"phone","instant-message")
+     * @param personal the aesthetic component of the address
+     * @param address the actual address
+     * @param typeOfCommunication one of the available CommunicationType ("internet-mail,"phone","instant-message")
      */
-    public SimpleAddress(String myPersonal, String myAddress, CommunicationType myType)
+    public SimpleAddress(@Nullable String personal, @Nonnull String address, @Nonnull CommunicationType typeOfCommunication)
     {
         //initiator
-        personal= myPersonal;
-        address = myAddress;
-        type    = myType.getValue();
-    }
-
-    /**
-     * Represents the address of a single party in a communication, assumed internet-mail type
-     * @param myPersonal the aesthetic component of the address
-     * @param myAddress the actual address
-     */
-    public SimpleAddress(String myPersonal,String myAddress)
-    {
-        //initiator (no type is assumed mail)
-        personal= myPersonal;
-        address = myAddress;
-        type    = CommunicationType.COMMUNICATION_MAIL.getValue();
+        this.personal= StringUtils.trimToNull(personal);
+        this.address = StringUtils.normalizeSpace(address);
+        this.type    = typeOfCommunication.getValue();
     }
 
     /**
      * Compares with another address for equality.
-     * @param mySimpleAddress the other address.
+     * @param address the other address.
      * @return true if the other object is the same address, false otherwise.
      */
     @Override
-    public boolean equals(Address mySimpleAddress)
+    public boolean equals(Address address)
     {
-        return mySimpleAddress.getAddress().equals(address);
+        return address.getAddress().toLowerCase().equals(this.address.toLowerCase());
     }
 
     /**
@@ -106,7 +98,7 @@ public class SimpleAddress implements Address {
     }
 
     /**
-     * Lazily implemented instead of full rfc822
+     * Lazily implemented instead of full rfc822, missing features are encoding (non-ASCII) and lengths
      * @return personal if found, otherwise address is returned
      */
     @Override
@@ -114,11 +106,40 @@ public class SimpleAddress implements Address {
     {
         if (personal == null)
         {
-            return address;
+            return quoteString(address,ADDRESS_SPECIALS);
         }
         else
         {
-            return personal;
+            return String.format("%s <%s>",
+                    quoteString(personal,PERSONAL_DISPLAY_SPECIALS),
+                    quoteString(address,ADDRESS_SPECIALS));
         }
+    }
+
+    /**
+     * Return the rfc822 string, fallback for logging purposes if that was needed
+     * @return the rfc822 string
+     */
+    @Override
+    public String toString()
+    {
+        return toRfc822String();
+    }
+
+    /**
+     * Removes the specials passed from the input and returns a quoted string
+     * TODO: This could instead encode the result if detected...
+     * @param input a string to be cleaned and then quoted
+     * @param specials the special characters to omit
+     * @return a quoted string that will have specials removed.
+     */
+    private String quoteString(String input,String[] specials)
+    {
+
+        for(String thisChar :specials)
+        {
+            input=input.replaceAll(thisChar,"");
+        }
+        return "\"" + input + "\"";
     }
 }
