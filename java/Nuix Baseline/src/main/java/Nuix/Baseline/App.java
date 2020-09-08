@@ -138,7 +138,7 @@ class App {
 
     /**
      * The main entry point for your application
-     * Use -h to print posible usage, -v to print version.
+     * Use -h to print possible usage, -v to print version.
      *
      * @param args The arguments received from the Command Line Interface (CLI)
      */
@@ -161,19 +161,24 @@ class App {
                         licencedEngine.getLicence().getWorkers()));
             });
         }
-    }
 
+
+
+    }
 
     /**
      * Parse the Command Line args into the defined variables.
      *
-     * @param args The paramaters received from the Command Line
+     * @param args The parameters received from the Command Line
      * @return Whether the values were successfully passed (will return false if Help or version requested)
      */
     private Boolean parseCommandLine(String[] args)
     {
         CommandLine commandLineApp = new CommandLine(this);
-        commandLineApp.setColorScheme(Help.defaultColorScheme(Help.Ansi.ON));
+        if(!System.getProperty("os.name").equals("windows")) //by default Windows does not support ANSI colours (regedit required)
+        {
+            commandLineApp.setColorScheme(Help.defaultColorScheme(Help.Ansi.AUTO));
+        }
         try
         {
             commandLineApp.parseArgs(args);
@@ -244,7 +249,7 @@ class App {
                         callback.setUsername(licenceServerUsername);
                         callback.setPassword(licenceServerPassword);
                     });
-                    LOGGER.info("Credential Callback applied:" + engine.getVersion());
+                    LOGGER.info("Credential Callback applied");
                 }
                 if (licenceServerTrustCertificate)
                 {
