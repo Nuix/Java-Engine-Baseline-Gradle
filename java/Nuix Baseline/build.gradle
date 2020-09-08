@@ -42,6 +42,13 @@ dependencies {
     //useful for parsing CLI paramaters
     implementation ("info.picocli:picocli:4.5.1")
 
+    //required for various date objects
+    implementation("joda-time:joda-time:2.10.6")
+
+    //useful for convenience, but otherwise not required.
+    implementation("commons-io:commons-io:+")
+    implementation("commons-lang:commons-lang:+")
+
     //May generate long command line warnings.. but wait and the IDE will shorten it.
     implementation fileTree(dir: 'engine/lib', include: 'nuix-scripting*.jar')
     implementation fileTree(dir: 'engine/lib', include: 'nuix-engine*.jar')
@@ -52,7 +59,8 @@ dependencies {
 
 applicationDefaultJvmArgs=['-Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"',
                            '-Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"',
-                           '-Dnuix.userDataDirs="' + System.getProperty("user.dir") + '\\engine\\user-data"']
+                           '-Dnuix.userDataDirs="' + System.getProperty("user.dir") + '\\engine\\user-data"',
+                           '-XX:MaxDirectMemorySize=4000m']
 
 import org.jetbrains.gradle.ext.*
 
@@ -66,6 +74,11 @@ task checkEnvironment {
             System.out.println("Running the build with Java ${actualJava}, expected 1.8")
         }
     }
+}
+
+task copyWssToEngineBin(type:Copy) {
+    from jar
+    into "engine/lib"
 }
 
 task checkSwitches {
@@ -136,6 +149,23 @@ idea
                                             scriptParameters='--tests "AppTest.*"'
                                             taskNames=[":test"]
                                             projectPath=System.getProperty("user.dir")
+                                            envs = new HashMap<String, String>() {
+                                                {
+                                                    // Prevent any potential conflicts with REST on the same box
+                                                    // Also prevent any potential existing issues with PATH
+                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
+                                                    // Example if required
+                                                    // put("JAVA_HOME", 'C:\\GitHub\\Java-Engine-Baseline-Gradle\\jdk1.8.0_261')
+                                                }
+                                            }
+                                            jvmArgs=applicationDefaultJvmArgs.join(" ")
+                                        }
+                                "Nuix Baseline [build,copy]"(Gradle)
+                                        {
+                                            scriptParameters=''
+                                            taskNames=["build","copyWssToEngineBin"]
+                                            projectPath=System.getProperty("user.dir")
+                                            //NOTE: all tests must be successful to build correctly... so comment out any tests you don't intend to keep
                                             envs = new HashMap<String, String>() {
                                                 {
                                                     // Prevent any potential conflicts with REST on the same box
