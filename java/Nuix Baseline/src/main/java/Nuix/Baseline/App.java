@@ -8,11 +8,8 @@ import nuix.engine.AvailableLicence;
 import nuix.engine.Engine;
 import nuix.engine.GlobalContainer;
 import nuix.engine.LicenceSource;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
-import org.apache.logging.log4j.core.config.DefaultConfiguration;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Help;
@@ -146,8 +143,6 @@ class App {
     {
         if(LOGGER==null)
         {
-            Configurator.initialize(new DefaultConfiguration());
-            Configurator.setLevel(LogManager.getLogger(App.class).getName(), Level.INFO);
             LOGGER = LogManager.getLogger(App.class);
         }
         App labEnvironment = new App();
