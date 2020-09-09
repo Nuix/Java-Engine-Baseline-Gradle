@@ -70,13 +70,28 @@ task checkEnvironment {
         //Enforce a java version of 1.8
         def actualJava = System.getProperty('java.version')
         if (!actualJava.startsWith("1.8")) {
-            //throw new GradleException("Running the build with Java ${actualJava}, expected 1.8")
-            System.out.println("Running the build with Java ${actualJava}, expected 1.8")
+            throw new GradleException("Running the build with Java ${actualJava}, expected 1.8")
+        }
+        if(System.getenv().containsKey("PATH"))
+        {
+            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/lib")))
+            {
+                throw new GradleException("Environment PATH variable does not reference the engine/lib directory")
+            }
+            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/bin")))
+            {
+                throw new GradleException("Environment PATH variable does not reference the engine/bin directory." +
+                        "Without this the workers will be spun up as jre processes instead of their compiled versions")
+            }
+        }
+        else
+        {
+            throw new GradleException("Environment has no PATH Variable, please set it")
         }
     }
 }
 
-task copyWssToEngineBin(type:Copy) {
+task copyWssToEngineLib(type:Copy) {
     from jar
     into "engine/lib"
 }
@@ -135,13 +150,11 @@ idea
                                               */
                                             programParameters = '-h ' +
                                                                 '-d="' + System.getProperty("user.dir") + '\\engine\\user-data"';
-                                            envs = new HashMap<String, String>() {
-                                                {
-                                                    // Prevent any potential conflicts with REST on the same box
-                                                    // Also prevent any potential existing issues with PATH
-                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
-                                                }
-                                            }
+                                            // Prevent any potential conflicts with REST on the same box
+                                            // Also prevent any potential existing issues with PATH
+                                            envs = com.google.common.collect.ImmutableMap.of(
+                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                            )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
                                 "Nuix Baseline Tests.App"(Gradle)
@@ -149,32 +162,24 @@ idea
                                             scriptParameters='--tests "AppTest.*"'
                                             taskNames=[":test"]
                                             projectPath=System.getProperty("user.dir")
-                                            envs = new HashMap<String, String>() {
-                                                {
-                                                    // Prevent any potential conflicts with REST on the same box
-                                                    // Also prevent any potential existing issues with PATH
-                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
-                                                    // Example if required
-                                                    // put("JAVA_HOME", 'C:\\GitHub\\Java-Engine-Baseline-Gradle\\jdk1.8.0_261')
-                                                }
-                                            }
+                                            // Prevent any potential conflicts with REST on the same box
+                                            // Also prevent any potential existing issues with PATH
+                                            envs = com.google.common.collect.ImmutableMap.of(
+                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                            )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
                                 "Nuix Baseline [build,copy]"(Gradle)
                                         {
                                             scriptParameters=''
-                                            taskNames=["build","copyWssToEngineBin"]
+                                            taskNames=["build","copyWssToEngineLib"]
                                             projectPath=System.getProperty("user.dir")
                                             //NOTE: all tests must be successful to build correctly... so comment out any tests you don't intend to keep
-                                            envs = new HashMap<String, String>() {
-                                                {
-                                                    // Prevent any potential conflicts with REST on the same box
-                                                    // Also prevent any potential existing issues with PATH
-                                                    put("PATH", System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin')
-                                                    // Example if required
-                                                    // put("JAVA_HOME", 'C:\\GitHub\\Java-Engine-Baseline-Gradle\\jdk1.8.0_261')
-                                                }
-                                            }
+                                            // Prevent any potential conflicts with REST on the same box
+                                            // Also prevent any potential existing issues with PATH
+                                            envs = com.google.common.collect.ImmutableMap.of(
+                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                            )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
                             }
