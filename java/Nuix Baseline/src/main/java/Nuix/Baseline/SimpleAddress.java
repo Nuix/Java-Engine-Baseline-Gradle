@@ -42,7 +42,7 @@ public class SimpleAddress implements Address {
     {
         //initiator
         this.personal= StringUtils.trimToNull(personal);
-        this.address = StringUtils.normalizeSpace(address);
+        this.address = address.trim();
         this.type    = typeOfCommunication.getValue();
     }
 
