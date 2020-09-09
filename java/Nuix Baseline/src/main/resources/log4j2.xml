@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="warn">
+    <Appenders>
+        <RollingFile name="mainAppLogger" fileName="logs/${date:yyyyMMddHH}/nuix-baseline.log" filePattern="nuix-baseline.%d.log">
+            <PatternLayout>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%t] %r %-5p %c - %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+		<Console name="console" target="SYSTEM_OUT">
+            <PatternLayout   pattern="%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%t] %r %-5p %c - %m%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="Nuix.Baseline.App" level="debug" additivity="true">
+            <appender-ref ref="mainAppLogger" level="debug" />
+        </Logger>
+		<Root level="debug" additivity="false">
+            <appender-ref ref="console" />
+        </Root>
+    </Loggers>
+</Configuration>
