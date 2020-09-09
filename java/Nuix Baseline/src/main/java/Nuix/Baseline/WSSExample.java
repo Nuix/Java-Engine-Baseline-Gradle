@@ -1,6 +1,7 @@
 package Nuix.Baseline;
 
 import nuix.WorkerItem;
+
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
@@ -19,8 +20,9 @@ public class WSSExample implements Consumer<WorkerItem>, AutoCloseable
      * nuixWorkerItemCallbackInit
      * Called when processing starts
      */
-    public WSSExample()
-    {
+    public WSSExample() throws Exception {
+        //Anything sent to System.out will appear in stdout.log in the job folder.
+        System.out.println("initiated");
 
     }
 
@@ -32,7 +34,7 @@ public class WSSExample implements Consumer<WorkerItem>, AutoCloseable
     @Override
     public void accept(WorkerItem workerItem)
     {
-
+        System.out.println("Worker Item Processed");
     }
 
     /**
@@ -41,7 +43,7 @@ public class WSSExample implements Consumer<WorkerItem>, AutoCloseable
      */
     @Override
     public void close() {
-
+        System.out.println("Shut Down");
     }
 
 }
