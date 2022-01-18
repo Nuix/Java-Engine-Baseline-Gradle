@@ -17,6 +17,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -267,8 +268,8 @@ class App {
                 LOGGER.info("Acquiring a licence from:" + String.join(",", LICENCE_SOURCES));
                 Map<String, String[]> licenceSourceConfig = ImmutableMap.of("sources", LICENCE_SOURCES);
                 Map<String, Integer> workerConfig = ImmutableMap.of("workerCount", LICENCE_WORKER_COUNT);
-                for (LicenceSource licenceSource : engine.getLicensor().findLicenceSources(licenceSourceConfig))
-                {
+                for (Iterator<LicenceSource> it = engine.getLicensor().findLicenceSourcesStream(licenceSourceConfig).iterator(); it.hasNext(); ) {
+                    LicenceSource licenceSource = it.next();
                     LOGGER.info("\tFound " + licenceSource.getLocation() + " (" + licenceSource.getType() + ")");
                     if (licenceSource.getLocation().equals(licenceSourceName) || (licenceSourceName.isEmpty()))
                     {

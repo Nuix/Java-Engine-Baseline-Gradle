@@ -21,73 +21,73 @@ repositories {
     flatDir {
         dirs 'engine/lib'
     }
+
+    mavenCentral()
 }
-
-
 
 dependencies {
     // This dependency is used by the application.
-    implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'com.google.guava:guava:31.0.1-jre'
 
     // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
 
     // Use JUnit Jupiter Engine for testing.
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
 
     // Useful for logging requirements
-    implementation( 'org.apache.logging.log4j:log4j-api:2.8.2')
-    implementation( 'org.apache.logging.log4j:log4j-core:2.8.2')
+    implementation( 'org.apache.logging.log4j:log4j-api:2.17.1')
+    implementation( 'org.apache.logging.log4j:log4j-core:2.17.1')
 
     //useful for parsing CLI paramaters
-    implementation ("info.picocli:picocli:4.5.1")
+    implementation 'info.picocli:picocli:4.6.2'
 
     //required for various date objects
-    implementation("joda-time:joda-time:2.10.6")
+    implementation("joda-time:joda-time:2.10.13")
 
     //useful for convenience, but otherwise not required.
-    implementation("commons-io:commons-io:+")
-    implementation("commons-lang:commons-lang:+")
+    compile 'commons-io:commons-io:2.11.0'
+    compile 'org.apache.commons:commons-lang3:3.12.0'
 
     //May generate long command line warnings.. but wait and the IDE will shorten it.
     implementation fileTree(dir: 'engine/lib', include: 'nuix-scripting*.jar')
     implementation fileTree(dir: 'engine/lib', include: 'nuix-engine*.jar')
     runtimeOnly fileTree(dir: 'engine/lib', include: '*.jar')
 
-    annotationProcessor 'info.picocli:picocli-codegen:4.5.1'
 }
 
-applicationDefaultJvmArgs=['-Dnuix.libdir="' + System.getProperty("user.dir") + '\\engine\\lib"',
-                           '-Dnuix.logdir="' + System.getProperty("user.dir") + '\\logs"',
-                           '-Dnuix.userDataDirs="' + System.getProperty("user.dir") + '\\engine\\user-data"',
+applicationDefaultJvmArgs=['-Dnuix.libdir="' + rootProject.rootDir + '\\engine\\lib"',
+                           '-Dnuix.logdir="' + rootProject.rootDir + '\\logs"',
+                           '-Dnuix.userDataDirs="' + rootProject.rootDir + '\\engine\\user-data"',
                            '-XX:MaxDirectMemorySize=4000m']
 
-import org.jetbrains.gradle.ext.*
+//import org.jetbrains.gradle.ext.*
 
 
 task checkEnvironment {
     doLast() {
         //Enforce a java version of 1.8
-        def actualJava = System.getProperty('java.version')
-        if (!actualJava.startsWith("1.8")) {
-            throw new GradleException("Running the build with Java ${actualJava}, expected 1.8")
-        }
-        if(System.getenv().containsKey("PATH"))
-        {
-            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/lib")))
-            {
-                throw new GradleException("Environment PATH variable does not reference the engine/lib directory")
-            }
-            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/bin")))
-            {
-                throw new GradleException("Environment PATH variable does not reference the engine/bin directory." +
-                        "Without this the workers will be spun up as jre processes instead of their compiled versions")
-            }
-        }
-        else
-        {
-            throw new GradleException("Environment has no PATH Variable, please set it")
-        }
+//        def actualJava = System.getProperty('java.version')
+//        if (!actualJava.startsWith("1)) {
+//            throw new GradleException("Running the build with Java ${actualJava}, expected 1.8")
+//        }
+
+//        if(System.getenv().containsKey("PATH"))
+//        {
+//            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/lib")))
+//            {
+//                throw new GradleException("Environment PATH variable does not reference the engine/lib directory")
+//            }
+//            if(!(System.getenv().get("PATH").toLowerCase().replace("\\", "/").contains("engine/bin")))
+//            {
+//                throw new GradleException("Environment PATH variable does not reference the engine/bin directory." +
+//                        "Without this the workers will be spun up as jre processes instead of their compiled versions")
+//            }
+//        }
+//        else
+//        {
+//            throw new GradleException("Environment has no PATH Variable, please set it")
+//        }
     }
 }
 
@@ -149,11 +149,11 @@ idea
                                               * as well as the Nuix container requirements
                                               */
                                             programParameters = '-h ' +
-                                                                '-d="' + System.getProperty("user.dir") + '\\engine\\user-data"';
+                                                                '-d="' + rootProject.rootDir + '\\engine\\user-data" ';
                                             // Prevent any potential conflicts with REST on the same box
                                             // Also prevent any potential existing issues with PATH
                                             envs = com.google.common.collect.ImmutableMap.of(
-                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                                    "PATH","${project.rootDir}\\engine\\bin;${project.rootDir}\\engine\\bin\\x86;"
                                             )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
@@ -165,7 +165,7 @@ idea
                                             // Prevent any potential conflicts with REST on the same box
                                             // Also prevent any potential existing issues with PATH
                                             envs = com.google.common.collect.ImmutableMap.of(
-                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                                    "PATH","${rootProject.rootDir}\\engine\\bin;${rootProject.rootDir}\\engine\\bin\\x86;"
                                             )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
@@ -178,7 +178,7 @@ idea
                                             // Prevent any potential conflicts with REST on the same box
                                             // Also prevent any potential existing issues with PATH
                                             envs = com.google.common.collect.ImmutableMap.of(
-                                                    "PATH",System.getProperty("user.dir") + '\\engine\\lib;' + System.getProperty("user.dir") + '\\engine\\bin'
+                                                    "PATH","${rootProject.rootDir}\\engine\\bin;${rootProject.rootDir}\\engine\\bin\\x86;"
                                             )
                                             jvmArgs=applicationDefaultJvmArgs.join(" ")
                                         }
