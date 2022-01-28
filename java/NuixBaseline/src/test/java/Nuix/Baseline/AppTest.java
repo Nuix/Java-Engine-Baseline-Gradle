@@ -10,18 +10,18 @@ class AppTest {
     @Test
     void acquireDongleLicence() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-s=dongle",
-                "-l=NX00001"};
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-licenceSourceType=dongle",
+                "-licenceSourceLocation=NX00001"};
         App.main(arguments);
     }
 
     @Test
     void acquireSystemLicence() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-s=system",
-                "-t=server"};
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-licenceSourceType=system",
+                "-licenceType=server"};
         App.main(arguments);
     }
 
@@ -29,64 +29,61 @@ class AppTest {
     @Test
     void ensureBadCertDoesNotAcquire() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-c=false",
-                "-s=server",
-                "-l=support-farm.nuix.com:27443",
-                "-t=enterprise-workstation",
-                "-w=2"};
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-trustCertificate=false",
+                "-licenceSourceType=server",
+                "-licenceSourceLocation=support-farm.nuix.com:27443",
+                "-licenceType=enterprise-workstation",
+                "-licenceWorkerCount=2"
+        };
+
         try {
             App.main(arguments);
             assert false : "Licence acquisition should have failed to this server";
         }
-        catch(Exception ex)
-        {
-            while(ex.getCause()!=null)
-            {
+        catch(Exception ex) {
+            while(ex.getCause()!=null) {
                 ex = (Exception) ex.getCause();
             }
             Assertions.assertEquals(ex.getMessage(),"unable to find valid certification path to requested target");
-
         }
-
     }
 
     @Test
     void acquireServerLicenceTrustingCertificate() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-c",
-                "-s=server",
-                "-l=support-farm.nuix.com:27443",
-                "-t=enterprise-workstation",
-                "-w=2"};
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-trustCertificate",
+                "-licenceSourceType=server",
+                "-licenceSourceLocation=support-farm.nuix.com:27443",
+                "-licenceType=enterprise-workstation",
+                "-licenceWorkerCount=2"};
         App.main(arguments);
     }
 
     @Test
     void acquireCloudServerLicence() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-s=cloud-server",
-                "-l=https://licence-api.nuix.com",
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-licenceSourceType=cloud-server",
+                "-licenceSourceLocation=https://licence-api.nuix.com",
                 "-u=developer.student",
                 "-p=developer.password",
-                "-t=enterprise-workstation",
-                "-w=2"};
+                "-licenceType=enterprise-workstation",
+                "-licenceWorkerCount=2"};
         App.main(arguments);
     }
     @Test
     void aboutHelpCheck() throws Exception {
-        String[] arguments = new String[] {
-                "-h"};
+        String[] arguments = new String[] { "-help" };
         App.main(arguments);
     }
 
     @Test
     void acquireAnyLicence() throws Exception {
         String[] arguments = new String[] {
-                "-d=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
-                "-a=true"};
+                "-userDataDirs=" + System.getProperty("nuix.userDataDirs",USER_DATA_DIR_DEFAULT),
+                "-acquireAny=true"};
         App.main(arguments);
     }
 
