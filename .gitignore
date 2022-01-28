@@ -1,6 +1,8 @@
+java/NuixBaseline/engine*
+java/NuixBaseline/logs*
 
-java/Nuix Baseline/engine*
-java/Nuix Baseline/logs*
+!java/NuixBaseline/engine/README.txt
+!java/NuixBaseline/logs/README.txt
 
 # From https://github.com/github/gitignore/blob/master/Gradle.gitignore
 .gradle
@@ -126,4 +128,4 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-java/Nuix Baseline/.idea/gradle.xml
+java/NuixBaseline/.idea/gradle.xml

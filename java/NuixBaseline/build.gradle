@@ -1,0 +1,159 @@
+// This Gradle build file built for and tested against IntelliJ.
+// Compatibility with other IDEs (such as Eclipse) are un-tested.
+
+// Here we specify plug-ins which provide capabilities to this
+// Gradle build file
+// https://docs.gradle.org/current/userguide/declaring_repositories.html
+plugins {
+    id 'java'
+    id 'application'
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.1"
+}
+
+// Declare what repositories dependencies may be resolved from
+// https://docs.gradle.org/current/userguide/declaring_repositories.html
+repositories {
+    mavenCentral()
+    flatDir { dirs 'engine/lib' }
+}
+
+// Declare dependencies for Gradle to resolve
+// https://docs.gradle.org/current/userguide/declaring_dependencies.html
+dependencies {
+    // This dependency is used by the application.
+    implementation 'com.google.guava:guava:31.0.1-jre'
+
+    // Use JUnit Jupiter API for testing.
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+
+    // Use JUnit Jupiter Engine for testing.
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+
+    // Useful for logging requirements
+    implementation 'org.apache.logging.log4j:log4j-api:2.17.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
+
+    // Useful for parsing CLI parameters
+    implementation 'info.picocli:picocli:4.6.2'
+
+    // Required for various date objects
+    implementation 'joda-time:joda-time:2.10.13'
+
+    // Useful for convenience, but otherwise not required.
+    implementation 'commons-io:commons-io:20030203.000550'
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+    // May generate long command line warnings.. but wait and the IDE will shorten it.
+    implementation fileTree(dir: 'engine/lib', include: 'nuix-scripting*.jar')
+    implementation fileTree(dir: 'engine/lib', include: 'nuix-engine*.jar')
+    runtimeOnly fileTree(dir: 'engine/lib', include: '*.jar')
+}
+
+// These are leveraged in this build file below
+import com.google.common.collect.ImmutableMap
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+// Here we define the location of some key directories so we can make
+// consistent references to them throughout the rest of this file
+String engineDirectory = rootProject.rootDir.getAbsolutePath() + "\\engine"
+String engineLibDirectory = engineDirectory + "\\lib"
+String engineBinDirectory = engineDirectory + "\\bin"
+String engineConfigDirectory = engineDirectory + "\\config"
+String engineX86BinDirectory = engineDirectory + "\\bin\\x86"
+String engineUserDataDirectory = engineDirectory + "\\user-data"
+String rootLogDir = rootProject.rootDir.getAbsolutePath() + "\\logs"
+String envPath = engineBinDirectory + ";" + engineX86BinDirectory
+
+// Here we specify arguments that will be passed to App directly
+def runArgs = [
+        '-licenceSourceType=dongle',
+        "-userDataDirs=\"${engineUserDataDirectory}\"",
+]
+
+// Here we are defining a task which will check out environment for some base
+// requirements such as using appropriate Java version, having a Nuix Engine release
+// present in the "engine" sub-directory and so on
+task checkEnvironment {
+    doLast {
+        println("Performing environment checks...")
+
+        // We want to make sure that we are using a version of Java that meets at least
+        // the Java 11 specification or higher
+        def javaSpecification = System.getProperty('java.vm.specification.version')
+
+        if(javaSpecification.contains('.') || Integer.parseInt(javaSpecification) < 11){
+            throw GradleException("Running the build with Java ${javaSpecification}, expected at least Java 11")
+        }
+
+        // Here we attempt to make sure we have an engine release in the "engine" sub-directory
+        // by checking for the presence of a few expected sub-directories
+
+        def engineDirectoryExists = new File(engineDirectory).exists()
+        def engineLibDirectoryExists = new File(engineLibDirectory).exists()
+        def engineBinDirectoryExists = new File(engineBinDirectory).exists()
+        def engineX86BinDirectoryExists= new File(engineX86BinDirectory).exists()
+        def engineUserDataDirectoryExists = new File(engineUserDataDirectory).exists()
+        def engineResolvable = engineDirectoryExists && engineLibDirectoryExists && engineBinDirectoryExists &&
+                engineX86BinDirectoryExists && engineUserDataDirectoryExists
+
+        println("["+(engineDirectoryExists ? "PASS" : "FAIL") + "] engine directory exists @ "+engineDirectory)
+        println("["+(engineLibDirectoryExists ? "PASS" : "FAIL") + "] engine lib directory exists @ "+engineLibDirectory)
+        println("["+(engineBinDirectoryExists ? "PASS" : "FAIL") + "] engine bin directory exists @ "+engineBinDirectory)
+        println("["+(engineX86BinDirectoryExists ? "PASS" : "FAIL") + "] engine bin/x86 directory exists @ "+engineX86BinDirectory)
+        println("["+(engineUserDataDirectoryExists ? "PASS" : "FAIL") + "] engine user-data directory exists @ "+engineUserDataDirectory)
+
+        if(!engineResolvable){
+            def message =
+                    "Unable to resolve one or more Nuix Engine directories!!!"
+            + "\nIf you have not done so already, please download a Nuix Engine release from "
+            + "\nhttps://download.nuix.com/releases/engine/latest"
+            + "\nAnd then extract the contents to the 'engine' sub-directory of this project."
+            throw new GradleException(message)
+        }
+    }
+}
+
+task copyWssToEngineLib(type:Copy) {
+    from jar
+    into "engine/lib"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+// Tasks which invoke a Java compilation operation
+compileJava {
+    dependsOn checkEnvironment
+}
+
+// Provided by the "application" plugin
+// https://docs.gradle.org/current/userguide/application_plugin.html
+application {
+    // Define the main class for the application.
+    mainClass = 'Nuix.Baseline.App'
+    // Arguments which will be passed to the JVM that our App runs in
+    applicationDefaultJvmArgs = [
+            // The add exports argument is very important for Nuix Engine in Java 11+
+            '--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED',
+            "-Dnuix.libdir=\"${engineLibDirectory}\"",
+            "-Dnuix.logdir=\"${rootLogDir}\\${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMDD_HHmmss"))}\"",
+            "-Dnuix.configdir=\"${engineConfigDirectory}\"",
+            "-Dnuix.userDataDirs=\"${engineUserDataDirectory}\"",
+            "-Djava.io.tmpdir=\"${System.getenv("LOCALAPPDATA")}\\Temp\\Nuix\"",
+            '-XX:MaxDirectMemorySize=4000m'
+    ]
+}
+
+run {
+    args(runArgs)
+    setEnvironment(ImmutableMap.of("PATH",envPath))
+}
+
+//test {
+//    // Use junit platform for unit tests
+//    useJUnitPlatform()
+//}

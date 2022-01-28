@@ -7,7 +7,6 @@ class AppTest {
 
     private static final String USER_DATA_DIR_DEFAULT="C:/ProgramData/Nuix";
 
-
     @Test
     void acquireDongleLicence() throws Exception {
         String[] arguments = new String[] {
@@ -90,6 +89,5 @@ class AppTest {
                 "-a=true"};
         App.main(arguments);
     }
-
 
 }
