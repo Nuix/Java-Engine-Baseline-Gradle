@@ -2,7 +2,7 @@
 
 ## Initial Setup
 
-1. Clone this repository to your local machine.
+1. Clone this repository to your local machine.  Choose a directory *without spaces in the path* as they can cause issues in some of the commands ran by Gradle.
 1. Get a **Nuix Engine** distribution in place:
     1. Download the latest release of Nuix Engine [here](https://download.nuix.com/releases/engine/).
     1. Once downloaded, extract the contents to the `engine` sub-directory.  For example if you cloned the repository to `C:\github\Java-Engine-Baseline-Gradle` on your local machine, extract to `C:\github\Java-Engine-Baseline-Gradle\NuixBaseline\engine`.
