@@ -105,10 +105,10 @@ task checkEnvironment {
 
         if(!engineResolvable){
             def message =
-                    "Unable to resolve one or more Nuix Engine directories!!!"
-            + "\nIf you have not done so already, please download a Nuix Engine release from "
-            + "\nhttps://download.nuix.com/releases/engine/latest"
-            + "\nAnd then extract the contents to the 'engine' sub-directory of this project."
+                "Unable to resolve one or more Nuix Engine directories!!!" +
+                "\nIf you have not done so already, please download a Nuix Engine release from " +
+                "\nhttps://download.nuix.com/releases/engine/latest" +
+                "\nAnd then extract the contents to the 'engine' sub-directory of this project."
             throw new GradleException(message)
         }
     }
