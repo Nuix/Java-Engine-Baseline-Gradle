@@ -1,5 +1,7 @@
 # Java Engine Baseline (Gradle)
 
+This repository contains an example demonstrating some fundamental concepts regarding use of the [Nuix Java Engine API](https://download.nuix.com/releases/engine/), primarily initialising the engine and obtaining a licence.
+
 ## Initial Setup
 
 1. Clone this repository to your local machine.  Choose a directory *without spaces in the path* as they can cause issues in some of the commands ran by Gradle.
