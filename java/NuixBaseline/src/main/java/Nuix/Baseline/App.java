@@ -152,7 +152,7 @@ class App {
         System.setProperty("log4j.configurationFile",log4jConfigFile.getAbsolutePath());
         log = LogManager.getLogger(App.class);
 
-        // Additionally, register our own console appender that writes more than just fatal errors
+        // Additionally, register our own console appender that writes more than just fatal errors to standard output
         PatternLayout layout = PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss.SSS Z} [%t] %r %-5p %c - %m%n").build();
         ConsoleAppender appender = ConsoleAppender.createDefaultAppenderForLayout(layout);
         appender.start();
