@@ -143,8 +143,6 @@ class App {
     public static void main(String[] args)
     {
         System.out.println("Provided Args: "+String.join("\n", args));
-        System.out.println("PATH: "+System.getenv("PATH"));
-        System.out.println("java.io.tmpdir: "+System.getProperty("java.io.tmpdir"));
 
         // Initialize log4j2 using settings in engine/config/log4j2.yml
         File log4jConfigFile = new File(System.getProperty("nuix.configdir"),"log4j2.yml");
