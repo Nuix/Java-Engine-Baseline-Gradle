@@ -252,6 +252,9 @@ class App {
 
                 log.info("Initialising:" + engine.getVersion());
 
+                // When getting a licence from source that requires authentication via a username and
+                // a password, we define a callback that will yield the appropriate authentication
+                // details when that licence source asks for them.
                 if(!licenceServerUsername.isEmpty() || !licenceServerPassword.isEmpty()) {
                     engine.whenAskedForCredentials(callback ->
                     {
@@ -262,6 +265,9 @@ class App {
                     log.info("Credential callback applied");
                 }
 
+                // When obtaining a licence from a remote source, we provide a callback that can
+                // inspect the certificate provided by the given source.  Our callback then decides
+                // whether we trust the certificate or not.
                 if (licenceServerTrustCertificate) {
                     //This method should only be reserved for scenario's you have issues and can't fix the licence source.
                     engine.whenAskedForCertificateTrust(callback -> {
@@ -271,6 +277,8 @@ class App {
                     log.info("Certificate Trust Callback applied:" + engine.getVersion());
                 }
 
+                // If provided argument to acquire any licence, we will ask the licensor to just obtain
+                // the first licence it can find.
                 if (engineAcquireAny)
                 {
                     engine.getLicensor().acquire();
@@ -326,7 +334,7 @@ class App {
                     // Looks like we have obtained a licence!
                     if(engine.getLicence() != null) {
                         // Add shutdown hook to call engine.close() to help ensure we
-                        // release licence in certain shutdown situations
+                        // release licence in certain shutdown situations like unexpected process termination.
                         Runtime.getRuntime().addShutdownHook(new Thread(engine::close));
 
                         // If engine is licenced, we need to look no further
@@ -356,6 +364,7 @@ class App {
                 }
             }
         }
+
         log.info("Engine is shutting down...");
     }
 }
