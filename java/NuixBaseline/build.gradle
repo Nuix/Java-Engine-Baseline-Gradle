@@ -130,30 +130,34 @@ compileJava {
     dependsOn checkEnvironment
 }
 
+argsForJvm = [
+        // The add exports argument is very important for Nuix Engine in Java 11+
+        '--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED',
+        "-Dnuix.libdir=\"${engineLibDirectory}\"",
+        "-Dnuix.logdir=\"${rootLogDir}\\${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMDD_HHmmss"))}\"",
+        "-Dnuix.configdir=\"${engineConfigDirectory}\"",
+        "-Dnuix.userDataDirs=\"${engineUserDataDirectory}\"",
+        "-Djava.io.tmpdir=\"${System.getenv("LOCALAPPDATA")}\\Temp\\Nuix\"",
+        '-XX:MaxDirectMemorySize=4000m'
+]
+
 // Provided by the "application" plugin
 // https://docs.gradle.org/current/userguide/application_plugin.html
 application {
     // Define the main class for the application.
     mainClass = 'Nuix.Baseline.App'
     // Arguments which will be passed to the JVM that our App runs in
-    applicationDefaultJvmArgs = [
-            // The add exports argument is very important for Nuix Engine in Java 11+
-            '--add-exports=java.base/jdk.internal.loader=ALL-UNNAMED',
-            "-Dnuix.libdir=\"${engineLibDirectory}\"",
-            "-Dnuix.logdir=\"${rootLogDir}\\${LocalDateTime.now().format(DateTimeFormatter.ofPattern("YYYYMMDD_HHmmss"))}\"",
-            "-Dnuix.configdir=\"${engineConfigDirectory}\"",
-            "-Dnuix.userDataDirs=\"${engineUserDataDirectory}\"",
-            "-Djava.io.tmpdir=\"${System.getenv("LOCALAPPDATA")}\\Temp\\Nuix\"",
-            '-XX:MaxDirectMemorySize=4000m'
-    ]
+    applicationDefaultJvmArgs = argsForJvm
 }
 
 run {
-    args(runArgs)
+    args(argsForJvm)
     setEnvironment(ImmutableMap.of("PATH",envPath))
 }
 
-//test {
-//    // Use junit platform for unit tests
-//    useJUnitPlatform()
-//}
+test {
+    jvmArgs(javaArgs)
+
+    // Use junit platform for unit tests
+    useJUnitPlatform()
+}
